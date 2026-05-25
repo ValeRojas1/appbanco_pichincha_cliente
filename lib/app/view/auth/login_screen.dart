@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodel/auth_viewmodel.dart';
+import '../../viewmodel/home_viewmodel.dart';
 import '../../ui/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,7 +34,10 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context, vm, _) {
               if (vm.state == AuthState.success) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  vm.reset();
+                  final usuario = vm.usuario;
+                  if (usuario != null) {
+                    Provider.of<HomeViewModel>(context, listen: false).init(usuario);
+                  }
                   Navigator.pushReplacementNamed(context, '/dashboard');
                 });
               }
@@ -136,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Demo — DNI: 47201831 | Pass: 4720',
+                      'Demo — DNI: 29384756 | Pass: 2938',
                       style: TextStyle(
                           fontSize: 11, color: AppTheme.grisMedio),
                       textAlign: TextAlign.center,

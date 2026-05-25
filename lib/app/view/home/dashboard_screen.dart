@@ -15,13 +15,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authVm = Provider.of<AuthViewModel>(context, listen: false);
-      final homeVm = Provider.of<HomeViewModel>(context, listen: false);
-      if (authVm.usuario != null) {
-        homeVm.init(authVm.usuario!);
-      }
-    });
   }
 
   @override
