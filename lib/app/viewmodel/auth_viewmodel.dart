@@ -1,32 +1,36 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../model/usuario_model.dart';
 
-// Estados posibles del login
 enum AuthState { idle, loading, success, error }
 
 class AuthViewModel extends ChangeNotifier {
+  final AuthService _authService = AuthService();
   AuthState _state = AuthState.idle;
   String _errorMessage = '';
+  UsuarioModel? _usuario;
 
   AuthState get state => _state;
   String get errorMessage => _errorMessage;
-
-  // Credenciales hardcodeadas para S9
-  static const String _dniValido = '12345678';
-  static const String _passwordValida = 'pichincha123';
+  UsuarioModel? get usuario => _usuario;
 
   Future<void> login(String dni, String password) async {
     _state = AuthState.loading;
     _errorMessage = '';
     notifyListeners();
 
-    // Simula una pequeña demora de red
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    if (dni == _dniValido && password == _passwordValida) {
-      _state = AuthState.success;
-    } else {
+    try {
+      final user = await _authService.login(dni, password);
+      if (user != null) {
+        _usuario = user;
+        _state = AuthState.success;
+      } else {
+        _state = AuthState.error;
+        _errorMessage = 'DNI o contraseña incorrectos';
+      }
+    } catch (e) {
       _state = AuthState.error;
-      _errorMessage = 'DNI o contraseña incorrectos';
+      _errorMessage = 'Error de conexión';
     }
     notifyListeners();
   }
@@ -34,6 +38,12 @@ class AuthViewModel extends ChangeNotifier {
   void reset() {
     _state = AuthState.idle;
     _errorMessage = '';
+    notifyListeners();
+  }
+
+  void logout() {
+    _usuario = null;
+    _state = AuthState.idle;
     notifyListeners();
   }
 }

@@ -1,41 +1,59 @@
 import 'package:flutter/material.dart';
+import '../services/cuenta_service.dart';
+import '../services/ahorro_service.dart';
 import '../model/usuario_model.dart';
 import '../model/cuenta_model.dart';
+import '../model/cuenta_ahorro_model.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  // Datos hardcodeados del cliente — S9
-  final UsuarioModel usuario = UsuarioModel(
-    nombre: 'Juan Carlos Pérez',
-    dni: '12345678',
-    email: 'juanperez@mibanco.com',
-  );
+  final CuentaService _cuentaService = CuentaService();
+  final AhorroService _ahorroService = AhorroService();
 
-  final CuentaModel cuentaAhorros = CuentaModel(
-    numeroCuenta: '001-123456789-0-01',
-    tipoCuenta: 'ahorros',
-    saldo: 4850.75,
-    moneda: 'S/',
-  );
-
-  final CuentaModel cuentaCredito = CuentaModel(
-    numeroCuenta: '001-987654321-0-02',
-    tipoCuenta: 'credito',
-    saldo: 10000.00,
-    moneda: 'S/',
-    montoPendiente: 2340.50,
-  );
-
-  // Tab activo en el BottomNavBar
+  UsuarioModel? _usuario;
+  List<CuentaModel> _cuentasList = [];
+  CuentaAhorroModel? _ahorro;
   int _tabIndex = 0;
+  bool _loading = true;
+
+  UsuarioModel? get usuario => _usuario;
+  List<CuentaModel> get cuentasList => _cuentasList;
+  CuentaModel? get cuentaCorriente => _cuentasList.cast<CuentaModel?>().firstWhere(
+    (c) => c?.tipocuenta == 'corriente', orElse: () => null);
+  CuentaModel? get cuentaAhorro => _cuentasList.cast<CuentaModel?>().firstWhere(
+    (c) => c?.tipocuenta == 'ahorro', orElse: () => null);
+  CuentaAhorroModel? get ahorro => _ahorro;
   int get tabIndex => _tabIndex;
+  bool get loading => _loading;
+
+  void init(UsuarioModel user) {
+    _usuario = user;
+    _cargarDatos();
+  }
+
+  Future<void> _cargarDatos() async {
+    _loading = true;
+    notifyListeners();
+
+    _cuentasList = await _cuentaService.getCuentas(_usuario!.userid);
+    _ahorro = await _ahorroService.getCuentaAhorro(_usuario!.userid);
+
+    _loading = false;
+    notifyListeners();
+  }
 
   void cambiarTab(int index) {
     _tabIndex = index;
     notifyListeners();
   }
 
-  // Formato de moneda
-  String formatearMonto(double monto) {
-    return 'S/ ${monto.toStringAsFixed(2)}';
+  String formatearMonto(double monto, {String moneda = 'S/'}) {
+    return '$moneda ${monto.toStringAsFixed(2)}';
+  }
+
+  void logout() {
+    _usuario = null;
+    _cuentasList = [];
+    _ahorro = null;
+    notifyListeners();
   }
 }

@@ -31,24 +31,19 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
           child: Consumer<AuthViewModel>(
             builder: (context, vm, _) {
-              // Navegar al dashboard cuando login es exitoso
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (vm.state == AuthState.success) {
+              if (vm.state == AuthState.success) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
                   vm.reset();
                   Navigator.pushReplacementNamed(context, '/dashboard');
-                }
-              });
+                });
+              }
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-
-                  // Logo Pichincha
                   _LogoPichincha(),
-
                   const SizedBox(height: 12),
-
                   Text(
                     'Banco Pichincha Perú',
                     style: TextStyle(
@@ -66,10 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppTheme.grisMedio,
                     ),
                   ),
-
                   const SizedBox(height: 48),
-
-                  // Campo DNI
                   TextField(
                     controller: _dniController,
                     keyboardType: TextInputType.number,
@@ -81,10 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       counterText: '',
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Campo Contraseña
                   TextField(
                     controller: _passController,
                     obscureText: !_verPassword,
@@ -103,19 +92,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  // Mensaje de error
                   if (vm.state == AuthState.error)
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.rojoError.withOpacity(0.1),
+                        color: AppTheme.rojoError.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: AppTheme.rojoError.withOpacity(0.4)),
+                            color: AppTheme.rojoError.withValues(alpha: 0.4)),
                       ),
                       child: Row(
                         children: [
@@ -130,10 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-
                   const SizedBox(height: 32),
-
-                  // Botón Ingresar
                   vm.state == AuthState.loading
                       ? const CircularProgressIndicator(
                           color: AppTheme.navy,
@@ -145,18 +128,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: const Text('INGRESAR'),
                         ),
-
                   const SizedBox(height: 24),
-
-                  // Hint para S9
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.navy.withOpacity(0.05),
+                      color: AppTheme.navy.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Demo S9 — DNI: 12345678 | Pass: pichincha123',
+                      'Demo — DNI: 47201831 | Pass: 4720',
                       style: TextStyle(
                           fontSize: 11, color: AppTheme.grisMedio),
                       textAlign: TextAlign.center,
@@ -172,7 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// Widget del logo Pichincha (SVG simulado con shapes)
 class _LogoPichincha extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -186,7 +165,6 @@ class _LogoPichincha extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Símbolo "L" invertido estilo Pichincha
           Positioned(
             left: 18,
             top: 18,

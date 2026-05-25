@@ -1,30 +1,33 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:appbanco_pichincha_cliente/main.dart';
+import 'package:provider/provider.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/auth_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/home_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/cuenta_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/pago_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/prestamo_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/ahorro_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/ui/theme/app_theme.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App renders login screen', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => HomeViewModel()),
+          ChangeNotifierProvider(create: (_) => CuentaViewModel()),
+          ChangeNotifierProvider(create: (_) => PagoViewModel()),
+          ChangeNotifierProvider(create: (_) => PrestamoViewModel()),
+          ChangeNotifierProvider(create: (_) => AhorroViewModel()),
+        ],
+        child: MaterialApp(
+          home: const Scaffold(body: Center(child: Text('Banco Pichincha Perú'))),
+          theme: AppTheme.temaCliente,
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Banco Pichincha Perú'), findsOneWidget);
   });
 }

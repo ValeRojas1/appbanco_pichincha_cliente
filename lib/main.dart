@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'app/core/supabase_config.dart';
 import 'app/navigation/app_router.dart';
 import 'app/ui/theme/app_theme.dart';
 import 'app/viewmodel/auth_viewmodel.dart';
 import 'app/viewmodel/home_viewmodel.dart';
+import 'app/viewmodel/cuenta_viewmodel.dart';
+import 'app/viewmodel/pago_viewmodel.dart';
+import 'app/viewmodel/prestamo_viewmodel.dart';
+import 'app/viewmodel/ahorro_viewmodel.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
   runApp(const AppPichinchaCliente());
 }
 
@@ -18,6 +29,10 @@ class AppPichinchaCliente extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => CuentaViewModel()),
+        ChangeNotifierProvider(create: (_) => PagoViewModel()),
+        ChangeNotifierProvider(create: (_) => PrestamoViewModel()),
+        ChangeNotifierProvider(create: (_) => AhorroViewModel()),
       ],
       child: MaterialApp(
         title: 'Banco Pichincha Perú',
