@@ -43,7 +43,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: vm.loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.navy))
-          : SingleChildScrollView(
+          : RefreshIndicator(
+              onRefresh: () => vm.recargar(),
+              child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,6 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
+          ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: vm.tabIndex,
         onTap: (index) {

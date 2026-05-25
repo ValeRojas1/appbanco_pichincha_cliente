@@ -30,6 +30,10 @@ class HomeViewModel extends ChangeNotifier {
     _cargarDatos();
   }
 
+  Future<void> recargar() async {
+    await _cargarDatos();
+  }
+
   Future<void> _cargarDatos() async {
     _loading = true;
     notifyListeners();
