@@ -31,15 +31,16 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> recargar() async {
-    await _cargarDatos();
+    _cuentasList = await _cuentaService.getCuentas(_usuario!.userid);
+    _ahorro = await _ahorroService.getCuentaAhorro(_usuario!.userid);
+    notifyListeners();
   }
 
   Future<void> _cargarDatos() async {
     _loading = true;
     notifyListeners();
 
-    _cuentasList = await _cuentaService.getCuentas(_usuario!.userid);
-    _ahorro = await _ahorroService.getCuentaAhorro(_usuario!.userid);
+    await recargar();
 
     _loading = false;
     notifyListeners();

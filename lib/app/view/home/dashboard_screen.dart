@@ -46,6 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           : RefreshIndicator(
               onRefresh: () => vm.recargar(),
               child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
