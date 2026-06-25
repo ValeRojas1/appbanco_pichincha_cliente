@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../viewmodel/cuenta_viewmodel.dart';
 import '../viewmodel/home_viewmodel.dart';
 import '../ui/theme/app_theme.dart';
+import '../ui/widgets/detalle_ahorro_modal.dart';
+import '../ui/widgets/cliente_bottom_nav_bar.dart';
+import '../ui/widgets/cliente_app_bar_leading.dart';
 
 class CuentasScreen extends StatefulWidget {
   const CuentasScreen({super.key});
@@ -16,10 +19,10 @@ class _CuentasScreenState extends State<CuentasScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = Provider.of<HomeViewModel>(context, listen: false).usuario;
-      if (user != null) {
+      final cliente = Provider.of<HomeViewModel>(context, listen: false).cliente;
+      if (cliente != null) {
         Provider.of<CuentaViewModel>(context, listen: false)
-            .cargarCuentas(user.userid);
+            .cargarCuentas(cliente.id);
       }
     });
   }
@@ -46,11 +49,31 @@ class _CuentasScreenState extends State<CuentasScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.grisClaro,
-      appBar: AppBar(title: const Text('Mis Cuentas')),
+      appBar: AppBar(
+        title: const Text('Mis Cuentas'),
+        leading: const ClienteAppBarLeading(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Inicio',
+            onPressed: () => irAlInicioCliente(context),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const ClienteBottomNavBar(selectedIndex: 1),
       body: vm.loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.navy))
           : vm.cuentas.isEmpty
-              ? const Center(child: Text('No tienes cuentas registradas'))
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'Aún no tienes cuentas activas.\nSi necesitas abrir una, tu asesor puede ayudarte.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.grisMedio, fontSize: 14),
+                    ),
+                  ),
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: vm.cuentas.length,
@@ -61,6 +84,19 @@ class _CuentasScreenState extends State<CuentasScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
+                        onTap: c.tipocuenta == 'ahorro'
+                            ? () {
+                                final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+                                if (homeVm.cliente != null) {
+                                  DetalleAhorroModal.mostrar(
+                                    context,
+                                    c,
+                                    homeVm.cliente!,
+                                    vm.cuentas,
+                                  );
+                                }
+                              }
+                            : null,
                         contentPadding: const EdgeInsets.all(16),
                         leading: CircleAvatar(
                           backgroundColor: AppTheme.navy,

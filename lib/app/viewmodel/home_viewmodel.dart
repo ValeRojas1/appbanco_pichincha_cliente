@@ -1,47 +1,52 @@
 import 'package:flutter/material.dart';
-import '../services/cuenta_service.dart';
-import '../services/ahorro_service.dart';
-import '../model/usuario_model.dart';
+import '../model/cliente_model.dart';
 import '../model/cuenta_model.dart';
 import '../model/cuenta_ahorro_model.dart';
+import '../services/cuenta_service.dart';
+import '../services/ahorro_service.dart';
+import '../services/auth_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final CuentaService _cuentaService = CuentaService();
   final AhorroService _ahorroService = AhorroService();
+  final AuthService _authService = AuthService();
 
-  UsuarioModel? _usuario;
-  List<CuentaModel> _cuentasList = [];
-  CuentaAhorroModel? _ahorro;
+  ClienteModel? _cliente;
+  List<CuentaModel> _cuentas = [];
+  CuentaAhorroModel? _cuentaAhorro;
+  bool _loading = false;
   int _tabIndex = 0;
-  bool _loading = true;
 
-  UsuarioModel? get usuario => _usuario;
-  List<CuentaModel> get cuentasList => _cuentasList;
-  CuentaModel? get cuentaCorriente => _cuentasList.cast<CuentaModel?>().firstWhere(
-    (c) => c?.tipocuenta == 'corriente', orElse: () => null);
-  CuentaModel? get cuentaAhorro => _cuentasList.cast<CuentaModel?>().firstWhere(
-    (c) => c?.tipocuenta == 'ahorro', orElse: () => null);
-  CuentaAhorroModel? get ahorro => _ahorro;
-  int get tabIndex => _tabIndex;
+  ClienteModel? get cliente => _cliente;
+  List<CuentaModel> get cuentas => _cuentas;
+  CuentaAhorroModel? get cuentaAhorro => _cuentaAhorro;
   bool get loading => _loading;
+  int get tabIndex => _tabIndex;
 
-  void init(UsuarioModel user) {
-    _usuario = user;
-    _cargarDatos();
+  CuentaModel? get cuentaCorriente =>
+      _cuentas.where((c) => c.tipocuenta.toLowerCase().contains('corriente')).firstOrNull;
+
+  CuentaModel? get cuentaAhorrosCuenta =>
+      _cuentas.where((c) => c.tipocuenta.toLowerCase().contains('ahorro')).firstOrNull;
+
+  void init(ClienteModel cliente) {
+    _cliente = cliente;
+    recargar();
+  }
+
+  // Keep backward compat - accept dynamic to avoid breaking existing calls
+  void initLegacy(dynamic usuario) {
+    // no-op for legacy UsuarioModel, use init(ClienteModel) instead
   }
 
   Future<void> recargar() async {
-    _cuentasList = await _cuentaService.getCuentas(_usuario!.userid);
-    _ahorro = await _ahorroService.getCuentaAhorro(_usuario!.userid);
-    notifyListeners();
-  }
-
-  Future<void> _cargarDatos() async {
+    if (_cliente == null) return;
     _loading = true;
     notifyListeners();
-
-    await recargar();
-
+    try {
+      _cuentas = await _cuentaService.getCuentas(_cliente!.id);
+      _cuentaAhorro = await _ahorroService.getCuentaAhorro(_cliente!.id);
+    } catch (_) {}
     _loading = false;
     notifyListeners();
   }
@@ -51,14 +56,17 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String formatearMonto(double monto, {String moneda = 'S/'}) {
-    return '$moneda ${monto.toStringAsFixed(2)}';
+  String formatearMonto(double? monto) {
+    if (monto == null) return 'S/ 0.00';
+    return 'S/ ${monto.toStringAsFixed(2)}';
   }
 
   void logout() {
-    _usuario = null;
-    _cuentasList = [];
-    _ahorro = null;
+    _authService.logout();
+    _cliente = null;
+    _cuentas = [];
+    _cuentaAhorro = null;
+    _tabIndex = 0;
     notifyListeners();
   }
 }

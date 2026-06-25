@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para registrar las coordenadas exactas de tu negocio en la solicitud de crédito.</string>
 </dict>
 </plist>

@@ -16,10 +16,10 @@ class _PagosScreenState extends State<PagosScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = Provider.of<HomeViewModel>(context, listen: false).usuario;
-      if (user != null) {
+      final cliente = Provider.of<HomeViewModel>(context, listen: false).cliente;
+      if (cliente != null) {
         Provider.of<PagoViewModel>(context, listen: false)
-            .cargarPagos(user.userid);
+            .cargarPagos(cliente.id);
       }
     });
   }
@@ -34,7 +34,16 @@ class _PagosScreenState extends State<PagosScreen> {
       body: vm.loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.navy))
           : vm.pagos.isEmpty
-              ? const Center(child: Text('No hay pagos registrados'))
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'Aún no tienes pagos registrados.\nCuando realices uno, aparecerá aquí automáticamente.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.grisMedio, fontSize: 14),
+                    ),
+                  ),
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: vm.pagos.length,

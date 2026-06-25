@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodel/auth_viewmodel.dart';
-import '../../viewmodel/home_viewmodel.dart';
-import '../../ui/theme/app_theme.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/auth_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/home_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/ofertas_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/ui/theme/app_theme.dart';
+import 'package:appbanco_pichincha_cliente/app/ui/widgets/modo_offline_banner.dart';
+import 'package:appbanco_pichincha_cliente/app/ui/widgets/detalle_ahorro_modal.dart';
+import 'package:appbanco_pichincha_cliente/app/ui/widgets/cliente_bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -15,21 +18,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cliente = Provider.of<AuthViewModel>(context, listen: false).cliente;
+      if (cliente != null) {
+        Provider.of<OfertasViewModel>(context, listen: false)
+            .cargar(cliente.id);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<HomeViewModel>(context);
-
     return Scaffold(
       backgroundColor: AppTheme.grisClaro,
       appBar: AppBar(
         title: const Text(
           'Banco Pichincha',
           style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         actions: [
+          Consumer<OfertasViewModel>(
+            builder: (_, ovm, __) {
+              final count = ovm.alertasNoLeidas.length;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                    ),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/alertas'),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.rojoError,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: 'Cerrar sesión',
@@ -42,125 +91,207 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: vm.loading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.navy))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.navy),
+            )
           : RefreshIndicator(
               onRefresh: () => vm.recargar(),
               child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hola, ${vm.usuario?.nombre.split(' ').first ?? ''}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.navy,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const ModoOfflineBanner(),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Hola, ${vm.cliente?.primerNombre ?? ''}',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.navy,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Bienvenido a tu banca personal',
-                    style:
-                        TextStyle(fontSize: 14, color: AppTheme.grisMedio),
-                  ),
-                  const SizedBox(height: 24),
-                  if (vm.cuentaCorriente != null)
-                    _TarjetaCuenta(
-                      titulo: 'Cuenta Corriente',
-                      numero: vm.cuentaCorriente!.numerocuenta ?? '',
-                      monto: vm.formatearMonto(vm.cuentaCorriente!.saldo),
-                      etiqueta: 'Saldo disponible',
-                      color: AppTheme.navy,
-                      icono: Icons.account_balance_outlined,
+                    const SizedBox(height: 4),
+                    Text(
+                      'Aquí puedes consultar tus cuentas, créditos y solicitudes',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.grisMedio,
+                      ),
                     ),
-                  if (vm.cuentaCorriente != null) const SizedBox(height: 16),
-                  if (vm.cuentaAhorro != null)
-                    _TarjetaCuenta(
-                      titulo: 'Cuenta de Ahorros',
-                      numero: vm.cuentaAhorro!.numerocuenta ?? '',
-                      monto: vm.formatearMonto(vm.cuentaAhorro!.saldo),
-                      etiqueta: 'Saldo disponible',
-                      color: const Color(0xFF1565C0),
-                      icono: Icons.savings_outlined,
+                    const SizedBox(height: 16),
+
+                    // Banner preaprobado
+                    Consumer<OfertasViewModel>(
+                      builder: (_, ovm, __) {
+                        if (!ovm.tienePreaprobado) {
+                          return const SizedBox.shrink();
+                        }
+                        final pre = ovm.preaprobado!;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFD100), Color(0xFFFFBF00)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.amarillo.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: AppTheme.navy,
+                                size: 32,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '¡Crédito Preaprobado!',
+                                      style: TextStyle(
+                                        color: AppTheme.navy,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Hasta S/ ${pre.montoPreaprobado.toStringAsFixed(0)} — ${pre.plazoMeses} meses',
+                                      style: const TextStyle(
+                                        color: AppTheme.navyOscuro,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pushNamed(context, '/ofertas'),
+                                child: const Text(
+                                  'Ver oferta',
+                                  style: TextStyle(
+                                    color: AppTheme.navy,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  if (vm.cuentaAhorro != null) const SizedBox(height: 28),
-                  const Text(
-                    'Accesos rápidos',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.navy,
+
+                    // Account cards
+                    if (vm.cuentaCorriente != null)
+                      _TarjetaCuenta(
+                        titulo: 'Cuenta Corriente',
+                        numero: vm.cuentaCorriente!.numerocuenta ?? '',
+                        monto: vm.formatearMonto(vm.cuentaCorriente!.saldo),
+                        etiqueta: 'Saldo disponible',
+                        color: AppTheme.navy,
+                        icono: Icons.account_balance_outlined,
+                      ),
+                    if (vm.cuentaCorriente != null) const SizedBox(height: 16),
+                    if (vm.cuentaAhorrosCuenta != null)
+                      _TarjetaCuenta(
+                        titulo: 'Cuenta de Ahorros',
+                        numero: vm.cuentaAhorrosCuenta!.numerocuenta ?? '',
+                        monto:
+                            vm.formatearMonto(vm.cuentaAhorrosCuenta!.saldo),
+                        etiqueta: 'Saldo disponible',
+                        color: const Color(0xFF1565C0),
+                        icono: Icons.savings_outlined,
+                        onTap: () {
+                          if (vm.cliente != null) {
+                            DetalleAhorroModal.mostrar(
+                              context,
+                              vm.cuentaAhorrosCuenta!,
+                              vm.cliente!,
+                              vm.cuentas,
+                            );
+                          }
+                        },
+                      ),
+                    if (vm.cuentaAhorrosCuenta != null)
+                      const SizedBox(height: 28),
+
+                    const Text(
+                      'Accesos rápidos',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.navy,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _AccesoRapido(
-                          icono: Icons.swap_horiz,
-                          label: 'Transferir',
-                          onTap: () {}),
-                      _AccesoRapido(
-                          icono: Icons.payment,
-                          label: 'Pagar',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/pagos');
-                          }),
-                      _AccesoRapido(
-                          icono: Icons.history,
-                          label: 'Historial',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/transacciones');
-                          }),
-                      _AccesoRapido(
-                          icono: Icons.account_balance,
-                          label: 'Préstamo',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/solicitud');
-                          }),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _AccesoRapido(
+                            icono: Icons.description_outlined,
+                            label: 'Solicitudes',
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/solicitudes'),
+                          ),
+                          const SizedBox(width: 16),
+                          _AccesoRapido(
+                            icono: Icons.calculate_outlined,
+                            label: 'Simulador',
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/preevaluacion'),
+                          ),
+                          const SizedBox(width: 16),
+                          _AccesoRapido(
+                            icono: Icons.payment,
+                            label: 'Pagar',
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/pagos'),
+                          ),
+                          const SizedBox(width: 16),
+                          _AccesoRapido(
+                            icono: Icons.history,
+                            label: 'Historial',
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/transacciones'),
+                          ),
+                          const SizedBox(width: 16),
+                          _AccesoRapido(
+                            icono: Icons.credit_score,
+                            label: 'Créditos',
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/creditos'),
+                          ),
+                          if (vm.cuentaAhorrosCuenta != null || (vm.cliente?.cuentasVigentes ?? 0) > 0) ...[
+                            const SizedBox(width: 16),
+                            _AccesoRapido(
+                              icono: Icons.send_to_mobile,
+                              label: 'Yape / Plin',
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/yape-plin'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
             ),
-          ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: vm.tabIndex,
-        onTap: (index) {
-          vm.cambiarTab(index);
-          switch (index) {
-            case 0:
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/cuentas');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/solicitud');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_outlined),
-            label: 'Cuentas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.credit_score_outlined),
-            label: 'Créditos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+      bottomNavigationBar: const ClienteBottomNavBar(selectedIndex: 0),
     );
   }
 }
@@ -172,6 +303,7 @@ class _TarjetaCuenta extends StatelessWidget {
   final String etiqueta;
   final Color color;
   final IconData icono;
+  final VoidCallback? onTap;
 
   const _TarjetaCuenta({
     required this.titulo,
@@ -180,11 +312,14 @@ class _TarjetaCuenta extends StatelessWidget {
     required this.etiqueta,
     required this.color,
     required this.icono,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -208,9 +343,10 @@ class _TarjetaCuenta extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(titulo,
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 13)),
+              Text(
+                titulo,
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
               Icon(icono, color: AppTheme.amarillo, size: 28),
             ],
           ),
@@ -224,9 +360,10 @@ class _TarjetaCuenta extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(etiqueta,
-              style:
-                  const TextStyle(color: Colors.white60, fontSize: 12)),
+          Text(
+            etiqueta,
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
           const SizedBox(height: 10),
           Text(
             numero,
@@ -234,6 +371,7 @@ class _TarjetaCuenta extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -265,9 +403,10 @@ class _AccesoRapido extends StatelessWidget {
             child: Icon(icono, color: AppTheme.navy, size: 26),
           ),
           const SizedBox(height: 6),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 11, color: AppTheme.navy)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: AppTheme.navy),
+          ),
         ],
       ),
     );

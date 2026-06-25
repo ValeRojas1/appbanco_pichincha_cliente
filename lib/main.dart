@@ -8,8 +8,11 @@ import 'app/viewmodel/auth_viewmodel.dart';
 import 'app/viewmodel/home_viewmodel.dart';
 import 'app/viewmodel/cuenta_viewmodel.dart';
 import 'app/viewmodel/pago_viewmodel.dart';
-import 'app/viewmodel/prestamo_viewmodel.dart';
 import 'app/viewmodel/ahorro_viewmodel.dart';
+import 'app/viewmodel/credito_viewmodel.dart';
+import 'app/viewmodel/solicitud_credito_viewmodel.dart';
+import 'app/viewmodel/ofertas_viewmodel.dart';
+import 'app/viewmodel/perfil_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,8 +34,11 @@ class AppPichinchaCliente extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => CuentaViewModel()),
         ChangeNotifierProvider(create: (_) => PagoViewModel()),
-        ChangeNotifierProvider(create: (_) => PrestamoViewModel()),
         ChangeNotifierProvider(create: (_) => AhorroViewModel()),
+        ChangeNotifierProvider(create: (_) => CreditoViewModel()),
+        ChangeNotifierProvider(create: (_) => SolicitudCreditoViewModel()),
+        ChangeNotifierProvider(create: (_) => OfertasViewModel()),
+        ChangeNotifierProvider(create: (_) => PerfilViewModel()),
       ],
       child: MaterialApp(
         title: 'Banco Pichincha Perú',
