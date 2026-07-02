@@ -187,7 +187,7 @@ class _TarjetaSolicitud extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                estado.mensajeCliente,
+                solicitud.mensajeEstado,
                 style: TextStyle(
                   fontSize: 12,
                   color: estado.color.withValues(alpha: 0.85),

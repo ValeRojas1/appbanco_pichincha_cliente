@@ -6,6 +6,7 @@ import 'package:appbanco_pichincha_cliente/app/viewmodel/home_viewmodel.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/theme/app_theme.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/widgets/cliente_bottom_nav_bar.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/widgets/cliente_app_bar_leading.dart';
+import 'package:appbanco_pichincha_cliente/app/viewmodel/notificacion_solicitud_viewmodel.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -26,6 +27,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   void _cerrarSesion() {
+    final dni = Provider.of<AuthViewModel>(context, listen: false).cliente?.documento;
+    if (dni != null) {
+      Provider.of<NotificacionSolicitudViewModel>(context, listen: false)
+          .limpiarAlCerrarSesion(dni);
+    }
     Provider.of<HomeViewModel>(context, listen: false).logout();
     Provider.of<AuthViewModel>(context, listen: false).logout();
     Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);

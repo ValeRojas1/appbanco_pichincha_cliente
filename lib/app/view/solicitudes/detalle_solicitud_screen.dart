@@ -83,7 +83,7 @@ class DetalleSolicitudScreen extends StatelessWidget {
                           style: const TextStyle(color: Colors.white70, fontSize: 14)),
                       const SizedBox(height: 10),
                       Text(
-                        estado.mensajeCliente,
+                        s.mensajeEstado,
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
                       ),

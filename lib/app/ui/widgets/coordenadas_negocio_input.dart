@@ -26,31 +26,40 @@ class CoordenadasNegocioInput extends StatefulWidget {
 class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
   late final TextEditingController _latCtrl;
   late final TextEditingController _lngCtrl;
+  late final FocusNode _latFocus;
+  late final FocusNode _lngFocus;
   bool _expandido = false;
   bool _obteniendoGps = false;
+  double? _latitudLocal;
+  double? _longitudLocal;
 
   @override
   void initState() {
     super.initState();
-    _latCtrl = TextEditingController(
-      text: widget.latitud != null ? widget.latitud!.toStringAsFixed(6) : '',
-    );
-    _lngCtrl = TextEditingController(
-      text: widget.longitud != null ? widget.longitud!.toStringAsFixed(6) : '',
-    );
-    _expandido = CoordenadasUtil.parValido(widget.latitud, widget.longitud);
+    _latitudLocal = widget.latitud;
+    _longitudLocal = widget.longitud;
+    _latCtrl = TextEditingController(text: _textoInicial(widget.latitud));
+    _lngCtrl = TextEditingController(text: _textoInicial(widget.longitud));
+    _latFocus = FocusNode();
+    _lngFocus = FocusNode();
+    _expandido = CoordenadasUtil.parValido(_latitudLocal, _longitudLocal);
+  }
+
+  String _textoInicial(double? valor) {
+    if (valor == null) return '';
+    return valor.toStringAsFixed(6);
   }
 
   @override
   void didUpdateWidget(CoordenadasNegocioInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.latitud != oldWidget.latitud) {
-      _latCtrl.text =
-          widget.latitud != null ? widget.latitud!.toStringAsFixed(6) : '';
+    if (!_latFocus.hasFocus && widget.latitud != oldWidget.latitud) {
+      _latitudLocal = widget.latitud;
+      _latCtrl.text = _textoInicial(widget.latitud);
     }
-    if (widget.longitud != oldWidget.longitud) {
-      _lngCtrl.text =
-          widget.longitud != null ? widget.longitud!.toStringAsFixed(6) : '';
+    if (!_lngFocus.hasFocus && widget.longitud != oldWidget.longitud) {
+      _longitudLocal = widget.longitud;
+      _lngCtrl.text = _textoInicial(widget.longitud);
     }
   }
 
@@ -58,17 +67,29 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
   void dispose() {
     _latCtrl.dispose();
     _lngCtrl.dispose();
+    _latFocus.dispose();
+    _lngFocus.dispose();
     super.dispose();
   }
 
-  void _emitLat(String v) {
-    final parsed = double.tryParse(v.trim().replaceAll(',', '.'));
-    widget.onLatitudChanged(parsed);
+  double? _parseTexto(String v) {
+    final t = v.trim().replaceAll(',', '.');
+    if (t.isEmpty || t == '-' || t == '.' || t == '-.') return null;
+    return double.tryParse(t);
   }
 
-  void _emitLng(String v) {
-    final parsed = double.tryParse(v.trim().replaceAll(',', '.'));
+  void _emitirLatitud() {
+    final parsed = _parseTexto(_latCtrl.text);
+    _latitudLocal = parsed;
+    widget.onLatitudChanged(parsed);
+    setState(() {});
+  }
+
+  void _emitirLongitud() {
+    final parsed = _parseTexto(_lngCtrl.text);
+    _longitudLocal = parsed;
     widget.onLongitudChanged(parsed);
+    setState(() {});
   }
 
   Future<void> _usarUbicacionActual() async {
@@ -103,6 +124,8 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
       if (!mounted) return;
       setState(() {
         _expandido = true;
+        _latitudLocal = pos.latitude;
+        _longitudLocal = pos.longitude;
         _latCtrl.text = pos.latitude.toStringAsFixed(6);
         _lngCtrl.text = pos.longitude.toStringAsFixed(6);
       });
@@ -127,7 +150,7 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
   @override
   Widget build(BuildContext context) {
     final tieneCoords =
-        CoordenadasUtil.parValido(widget.latitud, widget.longitud);
+        CoordenadasUtil.parValido(_latitudLocal, _longitudLocal);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -169,7 +192,7 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
                       Text(
                         tieneCoords
                             ? CoordenadasUtil.formatearCoordenadas(
-                                widget.latitud!, widget.longitud!)
+                                _latitudLocal!, _longitudLocal!)
                             : 'Latitud y longitud para que el asesor ubique tu local',
                         style: const TextStyle(
                           color: AppTheme.grisMedio,
@@ -212,6 +235,7 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
               Expanded(
                 child: TextFormField(
                   controller: _latCtrl,
+                  focusNode: _latFocus,
                   keyboardType: const TextInputType.numberWithOptions(
                     signed: true,
                     decimal: true,
@@ -227,13 +251,18 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
                     isDense: true,
                   ),
                   validator: CoordenadasUtil.validarLatitudTexto,
-                  onChanged: _emitLat,
+                  onEditingComplete: _emitirLatitud,
+                  onTapOutside: (_) {
+                    _latFocus.unfocus();
+                    _emitirLatitud();
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextFormField(
                   controller: _lngCtrl,
+                  focusNode: _lngFocus,
                   keyboardType: const TextInputType.numberWithOptions(
                     signed: true,
                     decimal: true,
@@ -249,7 +278,11 @@ class _CoordenadasNegocioInputState extends State<CoordenadasNegocioInput> {
                     isDense: true,
                   ),
                   validator: CoordenadasUtil.validarLongitudTexto,
-                  onChanged: _emitLng,
+                  onEditingComplete: _emitirLongitud,
+                  onTapOutside: (_) {
+                    _lngFocus.unfocus();
+                    _emitirLongitud();
+                  },
                 ),
               ),
             ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:appbanco_pichincha_cliente/app/viewmodel/auth_viewmodel.dart';
 import 'package:appbanco_pichincha_cliente/app/viewmodel/home_viewmodel.dart';
 import 'package:appbanco_pichincha_cliente/app/viewmodel/ofertas_viewmodel.dart';
+import 'package:appbanco_pichincha_cliente/app/core/notificacion_solicitud_helper.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/theme/app_theme.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/widgets/modo_offline_banner.dart';
 import 'package:appbanco_pichincha_cliente/app/ui/widgets/detalle_ahorro_modal.dart';
@@ -14,17 +15,33 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cliente = Provider.of<AuthViewModel>(context, listen: false).cliente;
       if (cliente != null) {
         Provider.of<OfertasViewModel>(context, listen: false)
             .cargar(cliente.id);
       }
+      revisarNotificacionesSolicitud(context);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      revisarNotificacionesSolicitud(context);
+    }
   }
 
   @override

@@ -11,6 +11,7 @@ import 'app/viewmodel/pago_viewmodel.dart';
 import 'app/viewmodel/ahorro_viewmodel.dart';
 import 'app/viewmodel/credito_viewmodel.dart';
 import 'app/viewmodel/solicitud_credito_viewmodel.dart';
+import 'app/viewmodel/notificacion_solicitud_viewmodel.dart';
 import 'app/viewmodel/ofertas_viewmodel.dart';
 import 'app/viewmodel/perfil_viewmodel.dart';
 
@@ -20,6 +21,7 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
   runApp(const AppPichinchaCliente());
 }
 
@@ -37,6 +39,7 @@ class AppPichinchaCliente extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AhorroViewModel()),
         ChangeNotifierProvider(create: (_) => CreditoViewModel()),
         ChangeNotifierProvider(create: (_) => SolicitudCreditoViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificacionSolicitudViewModel()),
         ChangeNotifierProvider(create: (_) => OfertasViewModel()),
         ChangeNotifierProvider(create: (_) => PerfilViewModel()),
       ],

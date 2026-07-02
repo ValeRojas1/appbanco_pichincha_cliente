@@ -28,6 +28,17 @@ class _LoginScreenState extends State<LoginScreen>
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeIn);
     _animCtrl.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restaurarSesion());
+  }
+
+  Future<void> _restaurarSesion() async {
+    final authVm = Provider.of<AuthViewModel>(context, listen: false);
+    final homeVm = Provider.of<HomeViewModel>(context, listen: false);
+    final ok = await authVm.recuperarSesion();
+    if (ok && mounted) {
+      homeVm.init(authVm.cliente!);
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
   }
 
   @override

@@ -10,6 +10,7 @@ enum EstadoSolicitud {
   documentosPendientes,
   completa,
   enComite,
+  condicionada,
   aprobada,
   rechazada,
   desembolsada;
@@ -37,6 +38,8 @@ enum EstadoSolicitud {
         return EstadoSolicitud.enComite;
       case 'aprobada':
         return EstadoSolicitud.aprobada;
+      case 'condicionada':
+        return EstadoSolicitud.condicionada;
       case 'rechazada':
         return EstadoSolicitud.rechazada;
       case 'desembolsada':
@@ -66,6 +69,8 @@ enum EstadoSolicitud {
         return 'En Comité';
       case EstadoSolicitud.aprobada:
         return 'Aprobada';
+      case EstadoSolicitud.condicionada:
+        return 'Condicionada';
       case EstadoSolicitud.rechazada:
         return 'Rechazada';
       case EstadoSolicitud.desembolsada:
@@ -74,7 +79,9 @@ enum EstadoSolicitud {
   }
 
   /// Mensaje orientativo para el cliente según el avance de su solicitud.
-  String get mensajeCliente {
+  String get mensajeCliente => mensajeParaCliente();
+
+  String mensajeParaCliente({DateTime? fechaDesembolso}) {
     switch (this) {
       case EstadoSolicitud.pendienteOperador:
       case EstadoSolicitud.pendiente:
@@ -92,12 +99,34 @@ enum EstadoSolicitud {
       case EstadoSolicitud.enComite:
         return 'Tu crédito está en comité de aprobación.';
       case EstadoSolicitud.aprobada:
-        return '¡Felicitaciones! Tu crédito fue aprobado. Pronto se registrará el desembolso.';
+        if (fechaDesembolso != null) {
+          return '¡Felicitaciones! Tu crédito fue aprobado. '
+              'Fecha de desembolso: ${_formatearFecha(fechaDesembolso)}.';
+        }
+        return '¡Felicitaciones! Tu crédito fue aprobado. '
+            'Te informaremos la fecha de desembolso pronto.';
+      case EstadoSolicitud.condicionada:
+        if (fechaDesembolso != null) {
+          return 'Tu solicitud requiere condiciones adicionales. '
+              'Fecha de desembolso estimada: ${_formatearFecha(fechaDesembolso)}.';
+        }
+        return 'Tu solicitud requiere algunas condiciones adicionales. '
+            'Nos pondremos en contacto contigo.';
       case EstadoSolicitud.rechazada:
         return 'Tu solicitud no fue aprobada en esta ocasión.';
       case EstadoSolicitud.desembolsada:
+        if (fechaDesembolso != null) {
+          return 'El crédito fue desembolsado el ${_formatearFecha(fechaDesembolso)}. '
+              'Revisa tus créditos activos.';
+        }
         return 'El crédito fue desembolsado. Revisa tus créditos activos.';
     }
+  }
+
+  static String _formatearFecha(DateTime fecha) {
+    return '${fecha.day.toString().padLeft(2, '0')}/'
+        '${fecha.month.toString().padLeft(2, '0')}/'
+        '${fecha.year}';
   }
 
   Color get color {
@@ -120,6 +149,8 @@ enum EstadoSolicitud {
         return AppTheme.navy;
       case EstadoSolicitud.aprobada:
         return AppTheme.verdeSaldo;
+      case EstadoSolicitud.condicionada:
+        return Colors.orange;
       case EstadoSolicitud.rechazada:
         return AppTheme.rojoError;
       case EstadoSolicitud.desembolsada:
@@ -147,6 +178,8 @@ enum EstadoSolicitud {
         return Icons.groups;
       case EstadoSolicitud.aprobada:
         return Icons.check_circle;
+      case EstadoSolicitud.condicionada:
+        return Icons.warning_amber;
       case EstadoSolicitud.rechazada:
         return Icons.cancel;
       case EstadoSolicitud.desembolsada:

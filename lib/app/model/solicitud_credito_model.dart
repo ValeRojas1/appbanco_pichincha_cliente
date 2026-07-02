@@ -58,6 +58,14 @@ class SolicitudCreditoModel {
   EstadoSolicitud get estadoEnum => EstadoSolicitud.fromString(estado);
   String get nombreCompleto => '$nombres $apellidos';
 
+  String get mensajeEstado =>
+      estadoEnum.mensajeParaCliente(fechaDesembolso: fechaDesembolso);
+
+  static DateTime? _parseFecha(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
   factory SolicitudCreditoModel.fromJson(Map<String, dynamic> json) {
     return SolicitudCreditoModel(
       id: json['id'] ?? '',
@@ -86,9 +94,7 @@ class SolicitudCreditoModel {
           : int.tryParse(json['antiguedadmeses']?.toString() ?? ''),
       numeroExpediente: json['numeroexpediente'],
       analistaAsignado: json['analistaasignado'],
-      fechaEnvio: json['fechaeenvio'] != null
-          ? DateTime.tryParse(json['fechaeenvio'])
-          : null,
+      fechaEnvio: _parseFecha(json['fechaenvio'] ?? json['fechaeenvio']),
       fechaAprobacion: json['fechaaprobacion'] != null
           ? DateTime.tryParse(json['fechaaprobacion'])
           : null,
